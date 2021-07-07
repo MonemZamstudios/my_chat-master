@@ -1,27 +1,18 @@
-
+import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:speech_to_text_plugins/speech_to_text_plugins.dart';
 
-class speechtotext extends StatelessWidget {
 
+class speechtotext extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return texttex();
-  }
-}
-class texttex extends StatefulWidget {
-  @override
-  _texttexState createState() => _texttexState();
+  _speechtotextState createState() => _speechtotextState();
 }
 
-class _texttexState extends State<texttex> {
+class _speechtotextState extends State<speechtotext> {
   bool _hasSpeech = false;
   double level = 0.0;
   double minSoundLevel = 50000;
@@ -36,13 +27,14 @@ class _texttexState extends State<texttex> {
 
   @override
   void initState() {
+    initSpeechState();
     super.initState();
   }
 
   Future<void> initSpeechState() async {
     var hasSpeech = await speech.initialize(
-        onError: errorListener,
-        onStatus: statusListener,
+      //  onError: errorListener,
+        //onStatus: statusListener,
         debugLogging: true,
         finalTimeout: Duration(milliseconds: 0));
     if (hasSpeech) {
@@ -61,157 +53,91 @@ class _texttexState extends State<texttex> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Speech to Text Example'),
-        ),
-        body: Column(children: [
-          Center(
-            child: Text(
-              'Speech recognition available',
-              style: TextStyle(fontSize: 22.0),
-            ),
-          ),
-          Container(
-            child: Column(
-              children: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: <Widget>[
-                    TextButton(
-                      onPressed: _hasSpeech ? null : initSpeechState,
-                      child: Text('Initialize'),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: <Widget>[
-                    TextButton(
-                      onPressed: !_hasSpeech || speech.isListening
-                          ? null
-                          : startListening,
-                      child: Text('Start'),
-                    ),
-                    TextButton(
-                      onPressed: speech.isListening ? stopListening : null,
-                      child: Text('Stop'),
-                    ),
-                    TextButton(
-                      onPressed: speech.isListening ? cancelListening : null,
-                      child: Text('Cancel'),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: <Widget>[
-                    DropdownButton(
-                      onChanged: (selectedVal) => _switchLang(selectedVal),
-                      value: _currentLocaleId,
-                      items: _localeNames
-                          .map(
-                            (localeName) => DropdownMenuItem(
-                          value: localeName.localeId,
-                          child: Text(localeName.name),
-                        ),
-                      )
-                          .toList(),
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 4,
-            child: Column(
-              children: <Widget>[
-                Center(
-                  child: Text(
-                    'Recognized Words',
-                    style: TextStyle(fontSize: 22.0),
-                  ),
-                ),
-                Expanded(
-                  child: Stack(
+    return Scaffold(
+
+        body: SafeArea(
+          child: Column(children: [
+
+            Container(
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: <Widget>[
-                      Container(
-                        color: Theme.of(context).selectedRowColor,
-                        child: Center(
-                          child: Text(
-                            lastWords,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                      Positioned.fill(
-                        bottom: 10,
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                    blurRadius: .26,
-                                    spreadRadius: level * 1.5,
-                                    color: Colors.black.withOpacity(.05))
-                              ],
-                              color: Colors.white,
-                              borderRadius:
-                              BorderRadius.all(Radius.circular(50)),
-                            ),
-                            child: IconButton(
-                              icon: Icon(Icons.mic),
-                              onPressed: () => null,
-                            ),
-                          ),
-                        ),
-                      ),
+                   
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Column(
-              children: <Widget>[
-                Center(
-                  child: Text(
-                    'Error Status',
-                    style: TextStyle(fontSize: 22.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: <Widget>[
+                      TextButton(
+                        onPressed: !_hasSpeech || speech.isListening
+                            ? null
+                            : startListening,
+                        child: Text('Start'),
+                      ),
+
+                    ],
                   ),
-                ),
-                Center(
-                  child: Text(lastError),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 20),
-            color: Theme.of(context).backgroundColor,
-            child: Center(
-              child: speech.isListening
-                  ? Text(
-                "I'm listening...",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              )
-                  : Text(
-                'Not listening',
-                style: TextStyle(fontWeight: FontWeight.bold),
+
+                ],
               ),
             ),
-          ),
-        ]),
-      ),
-    );
+            Expanded(
+              flex: 4,
+              child: Column(
+                children: <Widget>[
+
+                  Expanded(
+                    child: Stack(
+                      children: <Widget>[
+                        Container(
+                          color: Theme.of(context).selectedRowColor,
+                          child: Center(
+                            child: Text(
+                              lastWords,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                        Positioned.fill(
+                          bottom: 10,
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                      blurRadius: .26,
+                                      spreadRadius: level * 1.5,
+                                      color: Colors.black.withOpacity(.05))
+                                ],
+                                color: Colors.white,
+                                borderRadius:
+                                BorderRadius.all(Radius.circular(50)),
+                              ),
+                              child: IconButton(
+                                icon: Icon(Icons.mic),
+                                onPressed: () => null,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            FloatingActionButton(onPressed: (){},child:Icon(Icons.send,color: Colors.blue,),backgroundColor:Colors.white,)
+
+
+          ]),
+        ),
+      );
   }
 
   void startListening() {
@@ -229,25 +155,12 @@ class _texttexState extends State<texttex> {
     setState(() {});
   }
 
-  void stopListening() {
-    speech.stop();
-    setState(() {
-      level = 0.0;
-    });
-  }
-
-  void cancelListening() {
-    speech.cancel();
-    setState(() {
-      level = 0.0;
-    });
-  }
 
   void resultListener(SpeechRecognitionResult result) {
     ++resultListened;
     print('Result listener $resultListened');
     setState(() {
-      lastWords = '${result.recognizedWords} - ${result.finalResult}';
+      lastWords = '${result.recognizedWords}';
     });
   }
 
@@ -260,25 +173,6 @@ class _texttexState extends State<texttex> {
     });
   }
 
-  void errorListener(SpeechRecognitionError error) {
-    // print("Received error status: $error, listening: ${speech.isListening}");
-    setState(() {
-      lastError = '${error.errorMsg} - ${error.permanent}';
-    });
-  }
 
-  void statusListener(String status) {
-    // print(
-    // 'Received listener status: $status, listening: ${speech.isListening}');
-    setState(() {
-      lastStatus = '$status';
-    });
-  }
 
-  void _switchLang(selectedVal) {
-    setState(() {
-      _currentLocaleId = selectedVal;
-    });
-    print(selectedVal);
-  }
 }
