@@ -57,19 +57,21 @@ static final CameraPosition _kGooglePlex =CameraPosition(target: LatLng(22,44),z
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-      body: GoogleMap(
-        mapType: MapType.normal,
-        myLocationButtonEnabled: true,
-        myLocationEnabled: true,
-        zoomControlsEnabled: true,
-        onMapCreated: (GoogleMapController controller)
-        {
-          _controllerGoogleMap.complete(controller);
-          newGoogleMapController=controller;
+      body: SafeArea(
+        child: GoogleMap(
+          mapType: MapType.normal,
+          myLocationButtonEnabled: true,
+          myLocationEnabled: true,
+          zoomControlsEnabled: true,
+          onMapCreated: (GoogleMapController controller)
+          {
+            _controllerGoogleMap.complete(controller);
+            newGoogleMapController=controller;
 
-        },
+          },
 
-        initialCameraPosition: _kGooglePlex,
+          initialCameraPosition: _kGooglePlex,
+        ),
       ),
 
 

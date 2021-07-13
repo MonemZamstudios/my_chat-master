@@ -58,7 +58,7 @@ class _mybottomState extends State<mybottom> {
 
 
             ],
-            backgroundColor: Colors.green,
+            backgroundColor: Colors.teal,
             initialActiveIndex: 0, //optional, default as 0
             // activeColor: Colors.purple,
 

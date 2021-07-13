@@ -45,7 +45,7 @@ class _Homescreen1State extends State<Homescreen1>
     return Scaffold(
       appBar: AppBar(
         title: Text("My Chat"),
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.teal,
         actions: [
           IconButton(
               icon: Icon(Icons.exit_to_app),

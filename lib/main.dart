@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:learning_input_image/learning_input_image.dart';
 import 'package:letschat/components/colors.dart';
 import 'package:letschat/screens/camera.dart';
 import 'package:letschat/screens/provider.dart';

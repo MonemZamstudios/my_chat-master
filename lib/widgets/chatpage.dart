@@ -145,22 +145,21 @@ class _ChatPage1State extends State<ChatPage1> {
 
             }).toList();
 
-            return Container(
-              child: Stack(
-                children: [
+            return
 
+Column(
+  children: [
+Expanded(
+child: ListView(
+// reverse: true,
+padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
+            children: messageWidgets,
+            ),
 
-                  Expanded(
-                    child: ListView(
-                      // reverse: true,
-                      padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
-                      children: messageWidgets,
-                    ),
-                  ),
+            )
+  ],
+);
 
-                ],
-              ),
-            );
           },
         ),
 
