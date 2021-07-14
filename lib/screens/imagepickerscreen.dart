@@ -135,7 +135,9 @@ class _abcabcState extends State<abcabc> {
                               otherid: widget.otherid,
                               otheremail: widget.otheremail,
                               myid: widget.myid,
-                          isImage:  true);
+                          isImage:  true,
+                              isText:  false,
+                              isVideo: false);
                      //     provider.sendMessage(username: username, fullname: fullname, context: context);
                           Navigator.pop(context);
 

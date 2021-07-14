@@ -11,6 +11,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:letschat/api/firebase_api.dart';
 import 'package:letschat/components/constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -38,6 +39,7 @@ import 'package:flutter/material.dart';
 import 'package:highlight_text/highlight_text.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 import '../mainvideo.dart';
 import 'audio_add.dart';
 import 'camera.dart';
@@ -96,33 +98,6 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  File file;
-
-  Future video() async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
-      type: FileType.custom,
-      allowedExtensions: [
-        'mp4',
-        'MOV',
-        'WMV',
-        'AVI',
-        'AVCHD',
-        'FLV',
-        'F4V',
-        'SWF',
-        'MKV',
-        'WEBM ',
-        'HTML5',
-        'MPEG-2'
-      ],
-    );
-
-    if (result == null) return;
-    final path = result.files.single.path;
-
-    setState(() => file = File(path));
-  }
 
   File file2;
 
@@ -234,6 +209,7 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     });
+
   }
 
   Future toggleEmojiKeyboard() async {
@@ -272,7 +248,16 @@ class _ChatScreenState extends State<ChatScreen> {
   void onEmojiSelected(String emoji) => setState(() {
         controller.text = controller.text + emoji;
       });
+  VideoPlayerController _controllervideo;
+  Future<void> _initializeVideoPlayerFuture;
+  @override
 
+  @override
+  void dispose() {
+    _controllervideo.dispose();
+    // TODO: implement dispose
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<ChatSupportProvider>(context, listen: false);
@@ -597,13 +582,18 @@ class _ChatScreenState extends State<ChatScreen> {
                                                   ),
                                                   InkWell(
                                                     onTap: () async {
-                                                      await Permission.camera
-                                                          .request();
-                                                      //return CameraScreen();
-
-                                                      video();
-                                                      //  print('pressss');
-                                                      // Navigator.push(context, MaterialPageRoute(builder: (context) => CameraScreen()));
+                                                      provider.pickvideo(
+                                                          sender: loggedInuser
+                                                              .email,
+                                                          text: messageText,
+                                                          context: context,
+                                                          timestamp:
+                                                          Timestamp.now(),
+                                                          otherid:
+                                                          widget.othertoken,
+                                                          otheremail:
+                                                          widget.otheremail,
+                                                          myid: id.toString());
                                                     },
                                                     child: Column(
                                                       children: [
@@ -1076,6 +1066,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                        });
                                        provider.sendMessage(
                                            isImage: false,
+                                           isVideo: false,
+                                           isText: true,
                                            sender: loggedInuser.email,
                                            text: messageText,
                                            context: context,
@@ -1156,6 +1148,7 @@ class MessagesStream extends StatelessWidget {
           final currentUser = loggedInuser.email;
           final timeStamp = data['timestamp'];
           final imageURL = data['imageURL'];
+          final videoURL = data['videoURL'];
           final link = data['link'];
           return MessageBubble(
             sender: messageSender,
@@ -1163,6 +1156,7 @@ class MessagesStream extends StatelessWidget {
             timestamp: timeStamp,
             isMe: currentUser == messageSender,
             imageURL: imageURL,
+            videoURL: videoURL,
             link: link,
           );
         }).toList();
@@ -1182,16 +1176,18 @@ class MessagesStream extends StatelessWidget {
 class MessageBubble extends StatelessWidget {
   MessageBubble(
       {this.sender,
-      this.text,
-      this.timestamp,
-      this.isMe,
-      this.imageURL,
-      this.link});
+        this.text,
+        this.timestamp,
+        this.isMe,
+        this.imageURL,
+        this.videoURL,
+        this.link});
 
   final String sender;
   final String text;
   final Timestamp timestamp;
   final String imageURL;
+  final String videoURL;
   final String link;
 
   //var timestamp;
@@ -1199,142 +1195,230 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateTime =
-        DateTime.fromMillisecondsSinceEpoch(timestamp.seconds * 1000);
+
+    return chatnew(sender:sender,isMe:isMe,link:link,videoURL:videoURL,imageURL:imageURL,timestamp:timestamp,text:text,);
+  }
+}
+
+class chatnew extends StatefulWidget {
+  chatnew(
+      {this.sender,
+        this.text,
+        this.timestamp,
+        this.isMe,
+        this.imageURL,
+        this.videoURL,
+        this.link});
+
+  final String sender;
+  final String text;
+   final Timestamp timestamp ;
+  final String imageURL;
+  final String videoURL;
+  final String link;
+
+  //var timestamp;
+  final bool isMe;
+
+  @override
+  _chatnewState createState() => _chatnewState();
+}
+
+class _chatnewState extends State<chatnew> {
+
+  VideoPlayerController _controllervideo;
+  Future<void> _initializeVideoPlayerFuture;
+  @override
+  void initState() {
+    _controllervideo = VideoPlayerController.network(widget.videoURL);
+    _initializeVideoPlayerFuture=_controllervideo.initialize();
+    _controllervideo.setLooping(true);
+    _controllervideo.setVolume(1.0);
+    // TODO: implement initState
+    super.initState();
+  }
+  @override
+  void dispose() {
+    _controllervideo.dispose();
+    // TODO: implement dispose
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
     return Padding(
       padding: EdgeInsets.all(10.0),
-      child: link.isNotEmpty
+      child: widget.link.isNotEmpty
           ? Column(
-              crossAxisAlignment:
-                  isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  "${giveUsername(sender)}",
-                  style: TextStyle(fontSize: 12.0, color: Colors.black54),
-                ),
-                Material(
-                  borderRadius: isMe
-                      ? BorderRadius.only(
-                          bottomLeft: Radius.circular(30.0),
-                          topLeft: Radius.circular(30.0),
-                          bottomRight: Radius.circular(30.0),
-                        )
-                      : BorderRadius.only(
-                          bottomLeft: Radius.circular(30.0),
-                          topRight: Radius.circular(30.0),
-                          bottomRight: Radius.circular(30.0),
-                        ),
-                  elevation: 5.0,
-                  color: isMe ? Colors.deepPurple : PalletteColors.lightBlue,
-                  child: Padding(
-                    padding:
-                        EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                    child: Column(
-                      crossAxisAlignment: isMe
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            launch(link);
-                          },
-                          child: Text(
-                            link.toString(),
-                            style: TextStyle(
-                              fontSize: 18.0,
-                              color: isMe
-                                  ? Colors.lightBlueAccent
-                                  : Colors.lightBlueAccent,
-                            ),
-                          ),
-                        ),
-                        // imageURL.isNotEmpty?Image.network(imageURL):SizedBox(),
-                        //  imageURL.isNotEmpty?CachedNetworkImage(imageUrl:imageURL):SizedBox(width: 0,height: 0,),
-
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6.0),
-                          child: Text(
-                            "${DateFormat('h:mm a').format(dateTime)}",
-                            style: TextStyle(
-                              // child: Text(dateTime.toString(),style: TextStyle(
-                              fontSize: 9.0,
-                              color: isMe
-                                  ? Colors.white.withOpacity(0.5)
-                                  : Colors.black54.withOpacity(0.5),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+        crossAxisAlignment:
+        widget.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            "${giveUsername(widget.sender)}",
+            style: TextStyle(fontSize: 12.0, color: Colors.black54),
+          ),
+          Material(
+            borderRadius: widget.isMe
+                ? BorderRadius.only(
+              bottomLeft: Radius.circular(30.0),
+              topLeft: Radius.circular(30.0),
+              bottomRight: Radius.circular(30.0),
             )
-          : Column(
-              crossAxisAlignment:
-                  isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  "${giveUsername(sender)}",
-                  style: TextStyle(fontSize: 12.0, color: Colors.black54),
-                ),
-                Material(
-                  borderRadius: isMe
-                      ? BorderRadius.only(
-                          bottomLeft: Radius.circular(30.0),
-                          topLeft: Radius.circular(30.0),
-                          bottomRight: Radius.circular(30.0),
-                        )
-                      : BorderRadius.only(
-                          bottomLeft: Radius.circular(30.0),
-                          topRight: Radius.circular(30.0),
-                          bottomRight: Radius.circular(30.0),
-                        ),
-                  elevation: 5.0,
-                  color: isMe ? Colors.deepPurple : PalletteColors.lightBlue,
-                  child: Padding(
-                    padding:
-                        EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                    child: Column(
-                      crossAxisAlignment: isMe
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      children: [
-
-                        //  imageURL.isNotEmpty?Image.network(imageURL):SizedBox(),
-                        imageURL.isNotEmpty
-                            ? CachedNetworkImage(imageUrl: imageURL)
-                            : SizedBox(
-                                width: 0,
-                                height: 0,
-                              ),
-                        Text(
-                          text.toString(),
-                          style: TextStyle(
-                            fontSize: 18.0,
-                            color: isMe ? Colors.white : Colors.black54,
-                          ),
-                        ),
-
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6.0),
-                          child: Text(
-                            "${DateFormat('h:mm a').format(dateTime)}",
-                            style: TextStyle(
-                              // child: Text(dateTime.toString(),style: TextStyle(
-                              fontSize: 9.0,
-                              color: isMe
-                                  ? Colors.white.withOpacity(0.5)
-                                  : Colors.black54.withOpacity(0.5),
-                            ),
-                          ),
-                        ),
-                      ],
+                : BorderRadius.only(
+              bottomLeft: Radius.circular(30.0),
+              topRight: Radius.circular(30.0),
+              bottomRight: Radius.circular(30.0),
+            ),
+            elevation: 5.0,
+            color: widget.isMe ? Colors.deepPurple : PalletteColors.lightBlue,
+            child: Padding(
+              padding:
+              EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+              child: Column(
+                crossAxisAlignment: widget.isMe
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+                  InkWell(
+                    onTap: () {
+                      launch(widget.link);
+                    },
+                    child: Text(
+                      widget.link.toString(),
+                      style: TextStyle(
+                        fontSize: 18.0,
+                        color: widget.isMe
+                            ? Colors.lightBlueAccent
+                            : Colors.lightBlueAccent,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  // imageURL.isNotEmpty?Image.network(imageURL):SizedBox(),
+                  //  imageURL.isNotEmpty?CachedNetworkImage(imageUrl:imageURL):SizedBox(width: 0,height: 0,),
+
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6.0),
+                    child: Text(
+
+    "${DateFormat('h:mm a').format(DateTime.fromMillisecondsSinceEpoch(widget.timestamp.seconds * 1000))}",
+                      style: TextStyle(
+                        // child: Text(dateTime.toString(),style: TextStyle(
+                        fontSize: 9.0,
+                        color: widget.isMe
+                            ? Colors.white.withOpacity(0.5)
+                            : Colors.black54.withOpacity(0.5),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
+          ),
+        ],
+      )
+          : Column(
+        crossAxisAlignment:
+        widget.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            "${giveUsername(widget.sender)}",
+            style: TextStyle(fontSize: 12.0, color: Colors.black54),
+          ),
+          Material(
+            borderRadius: widget.isMe
+                ? BorderRadius.only(
+              bottomLeft: Radius.circular(30.0),
+              topLeft: Radius.circular(30.0),
+              bottomRight: Radius.circular(30.0),
+            )
+                : BorderRadius.only(
+              bottomLeft: Radius.circular(30.0),
+              topRight: Radius.circular(30.0),
+              bottomRight: Radius.circular(30.0),
+            ),
+            elevation: 5.0,
+            color: widget.isMe ? Colors.deepPurple : PalletteColors.lightBlue,
+            child: Padding(
+              padding:
+              EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+              child: Column(
+                crossAxisAlignment: widget.isMe
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+
+                  //  imageURL.isNotEmpty?Image.network(imageURL):SizedBox(),
+                  widget.imageURL.isNotEmpty ? Container(child: CachedNetworkImage(imageUrl: widget.imageURL)) : SizedBox(),
+                  widget.videoURL.isNotEmpty ? Center(
+                    child: Container(
+                      width:299,
+                      height: 300,
+                      child: Stack(
+                        children: [
+                          FutureBuilder(
+                            future: _initializeVideoPlayerFuture,
+                            builder: (context,snapshot){
+                              if(snapshot.connectionState==ConnectionState.done){
+                                return AspectRatio(
+                                  aspectRatio: _controllervideo.value.aspectRatio,
+                                  child: VideoPlayer(_controllervideo),);
+                              }
+                              else{
+                                return Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+                            },
+                          ),
+                          Center(
+                            child: FloatingActionButton(
+                              child: Icon(_controllervideo.value.isPlaying?Icons.pause:Icons.play_circle_fill),
+                              onPressed: (){
+                                setState(() {
+                                  if(_controllervideo.value.isPlaying){
+                                    _controllervideo.pause();
+                                  }
+                                  else
+                                  {
+                                    _controllervideo.play();
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ) : SizedBox(),
+                  Text(
+                    widget.text.toString(),
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      color: widget.isMe ? Colors.white : Colors.black54,
+                    ),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6.0),
+                    child: Text(
+                      "${DateFormat('h:mm a').format(DateTime.fromMillisecondsSinceEpoch(widget.timestamp.seconds * 1000))}",
+                      style: TextStyle(
+                        // child: Text(dateTime.toString(),style: TextStyle(
+                        fontSize: 9.0,
+                        color: widget.isMe
+                            ? Colors.white.withOpacity(0.5)
+                            : Colors.black54.withOpacity(0.5),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
+
