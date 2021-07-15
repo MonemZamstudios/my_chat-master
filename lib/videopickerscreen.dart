@@ -43,6 +43,10 @@ class _abcabcState extends State<abcabc> {
   Future<void> _initializeVideoPlayerFuture;
   @override
   void initState() {
+    print(widget.videourl);
+    print(widget.videourl);
+    print(widget.videourl);
+    print(widget.videourl);
     _controllervideo = VideoPlayerController.network(widget.videourl);
 _initializeVideoPlayerFuture=_controllervideo.initialize();
 _controllervideo.setLooping(true);
@@ -73,7 +77,7 @@ _controllervideo.setVolume(1.0);
           actions: [
 
             Container(
-              margin: EdgeInsets.only(right: 172),
+              margin: EdgeInsets.only(right: 132),
               child:  Row(
                 children: [
 

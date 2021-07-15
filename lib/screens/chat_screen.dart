@@ -42,6 +42,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import '../mainvideo.dart';
 import 'audio_add.dart';
+import 'audiopickerscreen.dart';
 import 'camera.dart';
 import 'imagepickerscreen.dart';
 
@@ -122,7 +123,8 @@ class _ChatScreenState extends State<ChatScreen> {
         'ODS',
         'PPT ',
         'PPTX',
-        'TXT'
+        'TXT',
+        'Zip',
       ],
     );
 
@@ -134,36 +136,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   File file4;
 
-  Future audio() async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
-      type: FileType.custom,
-      allowedExtensions: [
-        'mp3',
-        'audios',
-        'audio',
-        '3GA',
-        'AA',
-        'AA3',
-        'AAC',
-        'AAX',
-        'ABC',
-        'AC3',
-        'WAV',
-        'WMA',
-        'ZVR',
-        'M4A',
-        'FLAC',
-        'WAV',
-        'WMA'
-      ],
-    );
-
-    if (result == null) return;
-    final path = result.files.single.path;
-
-    setState(() => file4 = File(path));
-  }
 
   // File file5;
   // Future links() async {
@@ -335,7 +307,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
               actions: [
-                IconButton(icon: Icon(Icons.videocam), onPressed: () {}),
+                IconButton(icon: Icon(Icons.videocam), onPressed: () {
+               //   Navigator.push(context, MaterialPageRoute(builder: (context)=>pickeraudioscreen()));
+                }),
                 IconButton(icon: Icon(Icons.call), onPressed: () {}),
                 PopupMenuButton<String>(
                   padding: EdgeInsets.all(0),
@@ -669,12 +643,22 @@ class _ChatScreenState extends State<ChatScreen> {
                                                 children: [
                                                   InkWell(
                                                     onTap: () {
-                                                      //return CameraScreen();
 
-                                                      audio();
-                                                      //  print('pressss');
-                                                      // Navigator.push(context, MaterialPageRoute(builder: (context) => audioadd()));
-                                                    },
+                                                      provider.pickeraudio(
+                                                          sender: loggedInuser
+                                                              .email,
+                                                          text: messageText,
+                                                          context: context,
+                                                          timestamp:
+                                                          Timestamp.now(),
+                                                          otherid:
+                                                          widget.othertoken,
+                                                          otheremail:
+                                                          widget.otheremail,
+                                                          myid: id.toString());
+
+
+                                                   },
                                                     child: Column(
                                                       children: [
                                                         CircleAvatar(
@@ -1149,6 +1133,7 @@ class MessagesStream extends StatelessWidget {
           final timeStamp = data['timestamp'];
           final imageURL = data['imageURL'];
           final videoURL = data['videoURL'];
+          final audioURL = data['audioURL'];
           final link = data['link'];
           return MessageBubble(
             sender: messageSender,
@@ -1157,6 +1142,7 @@ class MessagesStream extends StatelessWidget {
             isMe: currentUser == messageSender,
             imageURL: imageURL,
             videoURL: videoURL,
+            audioURL: audioURL,
             link: link,
           );
         }).toList();
@@ -1181,6 +1167,7 @@ class MessageBubble extends StatelessWidget {
         this.isMe,
         this.imageURL,
         this.videoURL,
+        this.audioURL,
         this.link});
 
   final String sender;
@@ -1188,6 +1175,7 @@ class MessageBubble extends StatelessWidget {
   final Timestamp timestamp;
   final String imageURL;
   final String videoURL;
+  final String audioURL;
   final String link;
 
   //var timestamp;
@@ -1196,7 +1184,7 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    return chatnew(sender:sender,isMe:isMe,link:link,videoURL:videoURL,imageURL:imageURL,timestamp:timestamp,text:text,);
+    return chatnew(sender:sender,isMe:isMe,link:link,videoURL:videoURL,imageURL:imageURL,timestamp:timestamp,text:text,audioURL:audioURL);
   }
 }
 
@@ -1208,6 +1196,7 @@ class chatnew extends StatefulWidget {
         this.isMe,
         this.imageURL,
         this.videoURL,
+        this.audioURL,
         this.link});
 
   final String sender;
@@ -1215,6 +1204,7 @@ class chatnew extends StatefulWidget {
    final Timestamp timestamp ;
   final String imageURL;
   final String videoURL;
+  final String audioURL;
   final String link;
 
   //var timestamp;
@@ -1350,19 +1340,22 @@ class _chatnewState extends State<chatnew> {
 
                   //  imageURL.isNotEmpty?Image.network(imageURL):SizedBox(),
                   widget.imageURL.isNotEmpty ? Container(child: CachedNetworkImage(imageUrl: widget.imageURL)) : SizedBox(),
-                  widget.videoURL.isNotEmpty ? Center(
-                    child: Container(
-                      width:299,
-                      height: 300,
+                  widget.videoURL.isNotEmpty ?  Container(
+                     // width:55,
+                     // height: 300,
                       child: Stack(
                         children: [
                           FutureBuilder(
                             future: _initializeVideoPlayerFuture,
                             builder: (context,snapshot){
                               if(snapshot.connectionState==ConnectionState.done){
-                                return AspectRatio(
-                                  aspectRatio: _controllervideo.value.aspectRatio,
-                                  child: VideoPlayer(_controllervideo),);
+                                return Container(
+                                  width: 290,
+                                  height: 373,
+                                  child: AspectRatio(
+                                    aspectRatio: _controllervideo.value.aspectRatio,
+                                    child: VideoPlayer(_controllervideo),),
+                                );
                               }
                               else{
                                 return Center(
@@ -1371,26 +1364,30 @@ class _chatnewState extends State<chatnew> {
                               }
                             },
                           ),
-                          Center(
-                            child: FloatingActionButton(
-                              child: Icon(_controllervideo.value.isPlaying?Icons.pause:Icons.play_circle_fill),
-                              onPressed: (){
-                                setState(() {
-                                  if(_controllervideo.value.isPlaying){
-                                    _controllervideo.pause();
-                                  }
-                                  else
-                                  {
-                                    _controllervideo.play();
-                                  }
-                                });
-                              },
+                          Container(
+                          //  margin: EdgeInsets.only(top: 173,left: 105),
+                            child: Align(
+                              alignment: Alignment.topRight,
+                              child: FloatingActionButton(
+                                child: Icon(_controllervideo.value.isPlaying?Icons.pause:Icons.play_circle_fill),
+                                onPressed: (){
+                                  setState(() {
+                                    if(_controllervideo.value.isPlaying){
+                                      _controllervideo.pause();
+                                    }
+                                    else
+                                    {
+                                      _controllervideo.play();
+                                    }
+                                  });
+                                },
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ) : SizedBox(),
+                    ) : SizedBox(),
+                  widget.audioURL.isNotEmpty ?  Container(child: Text(widget.audioURL),) : SizedBox(),
                   Text(
                     widget.text.toString(),
                     style: TextStyle(

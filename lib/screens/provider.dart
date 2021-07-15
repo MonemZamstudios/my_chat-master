@@ -12,6 +12,7 @@ import 'package:path/path.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:video_player/video_player.dart';
 
+import 'audiopickerscreen.dart';
 import 'imagepickerscreen.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
@@ -76,6 +77,8 @@ void sendMessage({
         'text': text,
         'imageURL': '',
         'videoURL': '',
+        'audioURL': '',
+
         'timestamp': Timestamp.now(),
         'myid': myid,
         'otherid': otherid,
@@ -95,6 +98,7 @@ void sendMessage({
         'text': text,
         'imageURL': '',
         'videoURL': '',
+        'audioURL': '',
 
         'timestamp': Timestamp.now(),
         'myid': myid,
@@ -157,6 +161,7 @@ void sendMessage({
       'text': text,
       'imageURL': '$imageURL',
       'videoURL': '',
+      'audioURL': '',
 
       'timestamp': Timestamp.now(),
       'myid': myid,
@@ -177,6 +182,7 @@ void sendMessage({
       'text': text,
       'imageURL': '$imageURL',
       'videoURL': '',
+      'audioURL': '',
 
       'timestamp': Timestamp.now(),
       'myid': myid,
@@ -330,9 +336,78 @@ void pickeimage({
         otherid:otherid,otheremail:otheremail)));
   }
 
+///////////////////////////////////////////////////////////////////////
 
+  void pickeraudio({
+    @required BuildContext context,
+    @required String text,
+    @required String sender,
+    @required timestamp,
+    @required otherid,
+    @required otheremail,
+    @required myid,
+  })async{
+    File file;
+    final _fireStorage = firebase_storage.FirebaseStorage.instance;
 
+    print('yessssssssssssssssssssssssssss');
+  final result = await FilePicker.platform.pickFiles(
+    allowMultiple: true,
+    type: FileType.custom,
+    allowedExtensions: [
+      'mp3',
+      'MP3',
+      'audios',
+      'audio',
+      '3GA',
+      'AA',
+      'AA3',
+      'AAC',
+      'AAX',
+      'ABC',
+      'AC3',
+      'WAV',
+      'WMA',
+      'ZVR',
+      'M4A',
+      'FLAC',
+      'WAV',
+      'WMA',
+      'M4A',
+      'OPUS',
+      'aac',
+      'OGA'
+    ],
+  );
 
+  if (result == null) return;
+  final path = result.files.single.path;
+
+  file = File(path);
+  final filename=basename(file.path);
+  final destination = 'myaudios/$filename';
+
+  //final uuppllooaadd= FirebaseApi.uploadFile(destination,file);
+  var abc = await _fireStorage.ref().child(destination).putFile(file).then((value) {return value;});
+  String audiourl = await abc.ref.getDownloadURL();
+    print(audiourl);
+    sendAudios(
+        text: text,
+        sender: sender,
+        otherid: otherid,
+        audiourl: audiourl,
+        otheremail: otheremail,
+        myid: myid,
+        isImage:  false,
+        isAudio:  true,
+        isText:  false,
+        isVideo: true);
+    //     provider.sendMessage(username: username, fullname: fullname, context: context);
+    Navigator.pop(context);
+
+  // Navigator.push(context, MaterialPageRoute(builder: (context)=>pickeraudioscreen(audiourl:audiourl,myid:myid,sender:sender,
+  //     otherid:otherid,otheremail:otheremail)));
+  }
 
   /////////////////////////////////////////////////////////////////////////////////////
 
@@ -352,6 +427,7 @@ void pickeimage({
     @required bool isImage,
     @required bool isVideo,
     @required bool isText,
+    @required bool isAudio,
   })async{
 
     _firestore.collection('All Users').doc(myid)
@@ -363,6 +439,7 @@ void pickeimage({
       'text': text,
       'imageURL': '',
       'videoURL': videourl,
+      'audioURL': '',
       'timestamp': Timestamp.now(),
       'myid': myid,
       'otherid': otherid,
@@ -382,6 +459,8 @@ void pickeimage({
       'text': text,
       'imageURL': '',
       'videoURL': videourl,
+      'audioURL': '',
+
 
 
       'timestamp': Timestamp.now(),
@@ -415,7 +494,86 @@ void pickeimage({
 
 
   }
+////////////////////////////////////////////////
+  void sendAudios({
+    @required String text,
+    @required String sender,
+    @required BuildContext context,
+    @required timestamp,
+    @required otherid,
+    @required otheremail,
+    @required myid,
+    @required videourl,
+    @required audiourl,
+    @required bool isImage,
+    @required bool isVideo,
+    @required bool isText,
+    @required bool isAudio,
+  })async{
 
+    _firestore.collection('All Users').doc(myid)
+        .collection('Chats')
+        .doc(myid + otherid)
+        .collection('chat with')
+        .add({
+      'sender': sender,
+      'text': '',
+      'imageURL': '',
+      'videoURL': '',
+      'audioURL': audiourl,
+      'timestamp': Timestamp.now(),
+      'myid': myid,
+      'otherid': otherid,
+      'otheremail': otheremail,
+      'status': true,
+      'link': '',
+
+    });
+    _firestore
+        .collection('All Users')
+        .doc(otherid)
+        .collection('Chats')
+        .doc(otherid + myid)
+        .collection('chat with')
+        .add({
+      'sender': sender,
+      'text': '',
+      'imageURL': '',
+      'videoURL': '',
+      'audioURL': audiourl,
+
+
+      'timestamp': Timestamp.now(),
+      'myid': myid,
+      'otherid': otherid,
+      'otheremail': otheremail,
+      'status': 'true',
+      'link': '',
+
+    });
+    _firestore
+        .collection(
+        sender + 'chat with')
+        .add({
+      'me': sender,
+      'timestamp': Timestamp.now(),
+      'otheremail': otheremail,
+      'othertoken': otherid,
+      'myuid': myid,
+    });
+    _firestore
+        .collection(
+        otheremail + 'chat with')
+        .add({
+      'me': otheremail,
+      'timestamp': Timestamp.now(),
+      'otheremail': sender,
+      'othertoken': myid,
+      'myuid': otherid,
+    });
+
+
+  }
   }
 
 

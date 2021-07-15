@@ -40,10 +40,13 @@ class _ChatPage1State extends State<ChatPage1> {
 
       body: SafeArea(
         child: StreamBuilder(
-          stream: _firestore.collection(email+'chat with').orderBy("me", descending: true).snapshots(),
+          stream: _firestore
+              .collection('AllUsers')
+          // Sort the messages by timestamp DESC because we want the newest messages on bottom.
+              .orderBy("username", descending: true)
+
+              .snapshots(),
           builder: (context, snapshot) {
-
-
             // If we do not have data yet, show a progress indicator.
             if (!snapshot.hasData) {
               return Center(
@@ -53,116 +56,92 @@ class _ChatPage1State extends State<ChatPage1> {
             // Create the list of message widgets.
 
             // final messages = snapshot.data.documents.reversed;
-
             List<Widget> messageWidgets = snapshot.data.docs.map<Widget>((m) {
               final data = m.data();
-            //  final uesrname = data['othername'];
-              final otheremail = data['otheremail'];
+              final uesrname = data['username'];
+              final otheremail = data['useremail'];
+              // final useremail = data['username'];
               final  othertoken = data['token'];
-             // final  time = data['timestamp'];
-             //  final otheremail = data['otheremail'];
+
+              final id = FirebaseAuth.instance.currentUser.uid;
               final email =FirebaseAuth.instance.currentUser.email;
-              final  id = FirebaseAuth.instance.currentUser.uid;
-
-              //if(snapshot.hasData)
-
-              return
-              //  id.toString() ==othertoken.toString()?'':
-
-              Column(
-                  children: [
-
-                    InkWell(
-
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => ChatScreen(
-                                    myuid: id,
-                                    myemail: email,
-                                    otheremail: otheremail,
-                                    othertoken: othertoken
+              return  Column(
+                children: [
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ChatScreen(
+                                  myuid: id,
+                                  // othername: uesrname,
+                                  myemail: email,
+                                  othertoken: othertoken,
+                                  otheremail: otheremail
+                              )));
+                    },
 
 
-
-                                )));
-                      },
-
-                      child: (id.toString() ==othertoken.toString())? SizedBox():ListTile(
-                        leading: CircleAvatar(
-
-                          radius: 30,
-                          // child: SvgPicture.asset(
-                          // chatModel.isGroup ? "assets/groups.svg" : "assets/person.svg",
-                          //   color: Colors.white,
-                          //   height: 36,
-                          //   width: 36,
-                          // ),
-                          // backgroundColor: Colors.blueGrey,
+                    child: (id.toString() ==othertoken.toString())? SizedBox():ListTile(
+                      leading: CircleAvatar(
+                        radius: 30,
+                        // child: SvgPicture.asset(
+                        // chatModel.isGroup ? "assets/groups.svg" : "assets/person.svg",
+                        //   color: Colors.white,
+                        //   height: 36,
+                        //   width: 36,
+                        // ),
+                        // backgroundColor: Colors.blueGrey,
+                      ),
+                      title: Text(
+                        // chatModel.name,
+                        uesrname.toString(),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
-                        title: Text(
-                          // chatModel.name,
-                          otheremail.toString(),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                      ),
+                      subtitle: Row(
+                        children: [
+                          Icon(Icons.done_all),
+                          SizedBox(
+                            width: 3,
                           ),
-                        ),
-                        subtitle: Row(
-                          children: [
-                            Icon(Icons.done_all),
-                            SizedBox(
-                              width: 3,
+                          Text(
+                            //  chatModel.currentMessage,
+                            'Say Hi to '+ uesrname.toString(),
+                            style: TextStyle(
+                              fontSize: 13,
                             ),
-                            Expanded(
-                              child: Text(
-                                //  chatModel.currentMessage,
-                                'Say Hi to ' +otheremail.toString(),
-
-                                style: TextStyle(
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        //  trailing: Text(chatModel.time),
-                        trailing: Text('12:00'),
+                          ),
+                        ],
                       ),
+                      //  trailing: Text(chatModel.time),
+                      trailing: Text('12:00'),
+                    ),
 
 
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 20, left: 80),
+                    child: id.toString() ==othertoken.toString()?SizedBox():Divider(
+                      thickness: 1,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 20, left: 80),
-                      child: id.toString() ==othertoken.toString()?SizedBox():
-                      Divider(
-                        thickness: 1,
-                      ),
-                    ),
-                  ],
-                );
+                  ),
+                ],
+              );
 
             }).toList();
 
             return
+              ListView(
+                // reverse: true,
+                padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
+                children: messageWidgets,
 
-Column(
-  children: [
-Expanded(
-child: ListView(
-// reverse: true,
-padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
-            children: messageWidgets,
-            ),
-
-            )
-  ],
-);
-
+              );
           },
         ),
-
       ),
     );
   }

@@ -19,25 +19,25 @@ class pickerimagescreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return abcabc(imageurl:imageurl,myid:myid,sender:sender,
+    return xyzxyzxyzxyz(imageurl:imageurl,myid:myid,sender:sender,
         otherid:otherid,otheremail:otheremail);
   }
 }
 
-class abcabc extends StatefulWidget {
+class xyzxyzxyzxyz extends StatefulWidget {
   String imageurl;
   String myid;
   String otheremail;
   String otherid;
   String sender;
 
-  abcabc({@required this.imageurl,this.myid,this.sender,this.otheremail,this.otherid});
+  xyzxyzxyzxyz({@required this.imageurl,this.myid,this.sender,this.otheremail,this.otherid});
 
   @override
-  _abcabcState createState() => _abcabcState();
+  _xyzxyzxyzxyzState createState() => _xyzxyzxyzxyzState();
 }
 
-class _abcabcState extends State<abcabc> {
+class _xyzxyzxyzxyzState extends State<xyzxyzxyzxyz> {
   TextEditingController controller = new TextEditingController();
 
   @override
@@ -89,7 +89,7 @@ class _abcabcState extends State<abcabc> {
                 // color: Colors.black,
                 width: width * 1,
                 height: height * 1,
-                child: Image.file(provider.filePath),
+                child: Image.network(widget.imageurl),
               ),
               Positioned(
                 bottom: 11,
